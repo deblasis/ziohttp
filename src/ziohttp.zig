@@ -229,3 +229,22 @@ test "urlEncode special chars" {
     const len = urlEncode("a&b<c>d", &buf);
     try std.testing.expectEqualStrings("a%26b%3Cc%3Ed", buf[0..len]);
 }
+
+test "urlEncode empty string" {
+    var buf: [10]u8 = undefined;
+    const len = urlEncode("", &buf);
+    try std.testing.expectEqual(@as(usize, 0), len);
+}
+
+test "RequestLine parse DELETE" {
+    const rl = RequestLine.parse("DELETE /resource/42 HTTP/1.1").?;
+    try std.testing.expectEqual(Method.DELETE, rl.method);
+}
+
+test "parseHeaders stops at empty line" {
+    const input = "X-Custom: value\r\n\r\nX-Ignored: after";
+    var keys: [10][]const u8 = undefined;
+    var values: [10][]const u8 = undefined;
+    const count = try parseHeaders(input, &keys, &values);
+    try std.testing.expectEqual(@as(usize, 1), count);
+}
