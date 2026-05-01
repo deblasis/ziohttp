@@ -1,66 +1,68 @@
 # ziohttp
 
-Minimal HTTP client and server for Zig
+HTTP utilities for Zig. Request parsing, status codes, header handling, URL encoding — zero alloc.
 
-HTTP client and server library for Zig. Request/response routing, middleware, chunked encoding, and TLS support. Built on std.net.
+Parse HTTP request lines, status codes with category checks, header extraction, and URL encoding. Zero-allocation where possible.
 
-## Features
+## Quick start
 
-- HTTP/1.1 client and server
-- request routing
-- middleware chain
-- chunked encoding
-
-## Quick Start
-
-```zig
-const ziohttp = @import("ziohttp");
-
-pub fn main() !void {
-    // See examples/ for runnable code
-}
-```
-
-## Installation
-
-Add to your `build.zig.zon`:
-
-```zig
-.{
-    .dependencies = .{
-        .ziohttp = .{ .url = "https://github.com/deblasis/ziohttp/archive/refs/heads/main.tar.gz", .hash = "..." },
-    },
-}
+```bash
+zig fetch --save git+https://github.com/deblasis/ziohttp
 ```
 
 Then in your `build.zig`:
 
 ```zig
-const ziohttp = b.dependency("ziohttp", .{
+const dep = b.dependency("ziohttp", .{
     .target = target,
     .optimize = optimize,
 });
-exe.root_module.addImport("ziohttp", ziohttp.module("ziohttp"));
+exe.root_module.addImport("ziohttp", dep.module("ziohttp"));
 ```
 
-## Examples
+Requires Zig 0.16.
 
-Run the included example:
+## Example output
 
-```bash
-zig build run-example
+`zig build run-example` produces:
+
+```
+=== ziohttp example ===
+
+Request: GET /api/users?limit=10 HTTP/1.1
+  Method:  GET
+  Path:    /api/users?limit=10
+  Version: HTTP/1.1
+
+Headers (3):
+  Content-Type: application/json
+  Content-Length: 42
+  Authorization: Bearer token123
+
+URL encoded: hello%20world%20%26%20%3Ctest%3E
+
+200 success: true
+404 client error: true
+500 server error: true
 ```
 
-## API Reference
+See [examples/example.zig](examples/example.zig) for the source.
 
-See [src/ziohttp.zig](src/ziohttp.zig) for full documentation. All public symbols have doc comments.
+## API
+
+- `parseMethod(str)` — parse GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS
+- `RequestLine.parse(line)` — parse `METHOD /path HTTP/1.1`
+- `StatusCode` — enum with `.isSuccess()` / `.isRedirect()` / `.isClientError()` / `.isServerError()`
+- `parseHeaders(input, keys, values)` — extract headers
+- `getHeader(keys, values, name)` — case-insensitive lookup
+- `urlEncode(input, output)` — percent-encode
 
 ## Compatibility
 
-- **Zig:** 0.16.0
-- **Platforms:** Linux, macOS, Windows
-- **Breaking changes:** Follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Minor versions may add features, patch versions fix bugs.
+- **Zig**: 0.16.0
+- **Platforms**: Linux, macOS, Windows
+- **Breaking changes**: follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Minor versions add features, patch versions fix bugs.
 
 ## License
 
-MIT
+MIT. Copyright (c) 2026 Alessandro De Blasis.
