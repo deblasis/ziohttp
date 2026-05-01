@@ -190,3 +190,42 @@ test "urlEncode safe chars" {
     const len = urlEncode("hello-world_123", &buf);
     try std.testing.expectEqualStrings("hello-world_123", buf[0..len]);
 }
+
+test "parseMethod all methods" {
+    try std.testing.expectEqual(Method.PUT, parseMethod("PUT").?);
+    try std.testing.expectEqual(Method.PATCH, parseMethod("PATCH").?);
+    try std.testing.expectEqual(Method.HEAD, parseMethod("HEAD").?);
+    try std.testing.expectEqual(Method.OPTIONS, parseMethod("OPTIONS").?);
+    try std.testing.expectEqual(Method.CONNECT, parseMethod("CONNECT").?);
+    try std.testing.expectEqual(Method.TRACE, parseMethod("TRACE").?);
+}
+
+test "StatusCode all 2xx are success" {
+    try std.testing.expect(StatusCode.ok.isSuccess());
+    try std.testing.expect(StatusCode.created.isSuccess());
+    try std.testing.expect(StatusCode.no_content.isSuccess());
+}
+
+test "RequestLine with query string" {
+    const rl = RequestLine.parse("GET /search?q=hello&limit=10 HTTP/1.1").?;
+    try std.testing.expectEqualStrings("/search?q=hello&limit=10", rl.path);
+}
+
+test "parseHeaders empty input" {
+    var keys: [10][]const u8 = undefined;
+    var values: [10][]const u8 = undefined;
+    const count = try parseHeaders("", &keys, &values);
+    try std.testing.expectEqual(@as(usize, 0), count);
+}
+
+test "getHeader not found" {
+    const keys = [_][]const u8{"Content-Type"};
+    const values = [_][]const u8{"text/html"};
+    try std.testing.expect(getHeader(&keys, &values, "Authorization") == null);
+}
+
+test "urlEncode special chars" {
+    var buf: [100]u8 = undefined;
+    const len = urlEncode("a&b<c>d", &buf);
+    try std.testing.expectEqualStrings("a%26b%3Cc%3Ed", buf[0..len]);
+}
